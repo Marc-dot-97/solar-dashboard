@@ -1,0 +1,23 @@
+{
+  "name": "solar-dashboard",
+  "version": "1.0.0",
+  "description": "Live Victron VRM dashboard for Pentagon Partners (installation 329491), with MySQL history",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
