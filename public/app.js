@@ -3,7 +3,9 @@
 // Uses the PrimeBridge Motion Kit (window.Motion) for every animation:
 //   show/hide = opacity (+ one-axis move) · state change = scale · sequences for order
 // =============================================================================
-const { refreshSeconds, historyEnabled } = window.DASHBOARD;
+// Settings come from data- attributes on <body> (set by the server in views/index.ejs)
+const refreshSeconds = Number(document.body.dataset.refreshSeconds) || 15;
+const historyEnabled = document.body.dataset.historyEnabled === "true";
 const $ = (id) => document.getElementById(id);
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

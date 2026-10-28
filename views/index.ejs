@@ -15,7 +15,7 @@
   <!-- hide reveal content only when JavaScript runs, so the page never stays blank -->
   <script>document.documentElement.classList.add("js");</script>
 </head>
-<body>
+<body data-refresh-seconds="<%= refreshSeconds %>" data-history-enabled="<%= historyEnabled %>">
   <a class="skip-link" href="#main">Skip to the dashboard</a>
 
   <!-- ===== Header ===== -->
@@ -38,7 +38,7 @@
           <span class="status-time" id="statusTime">Waiting for the first reading</span>
         </span>
       </div>
-      <div class="clock" aria-label="Local time">
+      <div class="clock">
         <span class="eyebrow">LOCAL TIME</span>
         <span id="clock">--:--</span>
       </div>
@@ -197,9 +197,6 @@
     <ul class="drawer-list" id="drawerEvents"></ul>
   </aside>
 
-  <script>
-    window.DASHBOARD = { refreshSeconds: <%= refreshSeconds %>, historyEnabled: <%= historyEnabled %> };
-  </script>
   <% if (historyEnabled) { %>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <% } %>
