@@ -191,6 +191,51 @@ main { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 32px va
 .soc-limit { fill: var(--stone); opacity: 0; }
 .soc-limit.is-set { opacity: 0.8; }
 
+/* ---------- Stage + full screen (wall display) ---------- */
+.stage { position: relative; }
+.stage-bar { display: none; }                    /* only shown in full screen */
+.fs-btn {
+  position: absolute; top: 0; right: 0; z-index: 2;
+  width: auto; padding: 0 14px; gap: 10px;
+  display: inline-flex; align-items: center;
+  font: 800 11px var(--font); letter-spacing: 0.16em;
+  background: rgba(38, 41, 45, 0.85);
+}
+.fs-btn .icon { width: 18px; height: 18px; }
+.fs-icon { display: grid; }
+.fs-icon--exit { display: none; }
+
+.stage.is-fullscreen {
+  position: fixed; inset: 0; z-index: 60;       /* fallback for browsers without the Fullscreen API */
+  display: grid; grid-template-rows: auto minmax(0, 1fr);
+  background: var(--charcoal);
+  padding: 0 clamp(16px, 3vw, 48px) clamp(16px, 3vh, 40px);
+  opacity: 1 !important;
+}
+.stage:fullscreen { width: 100vw; height: 100vh; }
+.stage.is-fullscreen::before {                   /* matte grain also in full screen (static) */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.26; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.stage.is-fullscreen .stage-bar {
+  position: relative;
+  display: flex; align-items: center; gap: 20px;
+  padding: clamp(14px, 2.4vh, 28px) 0;
+  margin-bottom: clamp(8px, 2vh, 24px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.stage-address { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.stage-meta { margin-left: auto; display: flex; align-items: center; gap: 28px; padding-right: 190px; }
+.stage.is-fullscreen .site-name { font-size: clamp(18px, 1.6vw, 26px); }
+.stage.is-fullscreen .clock span:last-child { font-size: clamp(18px, 1.6vw, 26px); }
+.stage.is-fullscreen .fs-btn { top: clamp(14px, 2.4vh, 28px); right: clamp(16px, 3vw, 48px); height: 44px; }
+.stage.is-fullscreen .fs-icon--enter { display: none; }
+.stage.is-fullscreen .fs-icon--exit { display: grid; }
+.stage.is-fullscreen .flow { position: relative; min-height: 0; height: 100%; overflow: hidden; }
+.stage.is-fullscreen .flow-svg { position: absolute; inset: 0; width: 100%; height: 100%; }  /* viewBox keeps the shape, centred */
+.stage.is-fullscreen .toasts { position: absolute; }
+.stage.is-fullscreen .refresh-line { bottom: -1px; }
+
 /* ---------- Cards ---------- */
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
 .card {
@@ -328,6 +373,12 @@ main { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 32px va
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
+  .fs-label { display: none; }
+  .fs-btn { padding: 0; width: 44px; justify-content: center; }
+  .stage-meta { padding-right: 56px; gap: 14px; }
+  .stage.is-fullscreen .stage-address, .stage.is-fullscreen .clock { display: none; }
+  .hero .stage { padding-top: 52px; }
+  .hero .stage.is-fullscreen { padding-top: 0; }
   :root { --gutter: 16px; }
   .header-rule, .app-logo .pb-wordmark, .clock { display: none; }
   .header-meta { gap: 10px; }

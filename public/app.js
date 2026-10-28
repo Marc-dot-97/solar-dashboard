@@ -305,7 +305,7 @@ function detectEvents(d) {
   const b0 = dir(prev.battery.power), b1 = dir(d.battery.power);
   if (b0 !== b1) {
     if (b1 === 1) say("info", "Your battery is charging", `${watts(d.battery.power)} flowing in at ${Math.round(d.battery.soc)}%.`);
-    if (b1 === -1) say("info", "Your battery is powering the house", `${watts(-d.battery.power)} flowing out at ${Math.round(d.battery.soc)}%.`);
+    if (b1 === -1) say("info", "Your battery is powering the building", `${watts(-d.battery.power)} flowing out at ${Math.round(d.battery.soc)}%.`);
   }
   const g0 = dir(prev.grid.total), g1 = dir(d.grid.total);
   if (g0 !== g1 && g1 === -1) say("ok", "You're exporting to the grid", `${watts(-d.grid.total)} goes back to the grid.`);
@@ -353,30 +353,92 @@ document.addEventListener("keydown", (e) => {
 // Header status, refresh feedback and clock
 // =============================================================================
 function setStatus(level, label, detail) {
-  const icon = $("statusIcon");
-  if (icon.dataset.level !== level) {
-    icon.dataset.level = level;
-    icon.innerHTML = signalIcon(level);
-    pulse(icon);
-  }
-  $("statusText").textContent = label;
-  $("statusTime").textContent = detail;
+  // the header and the full-screen bar show the same live status
+  [["statusIcon", "statusText", "statusTime"], ["stageStatusIcon", "stageStatusText", "stageStatusTime"]].forEach(([i, t, d]) => {
+    const icon = $(i);
+    if (icon.dataset.level !== level) {
+      icon.dataset.level = level;
+      icon.innerHTML = signalIcon(level);
+      if (icon.offsetParent) pulse(icon); // only animate what you can see
+    }
+    $(t).textContent = label;
+    $(d).textContent = detail;
+  });
 }
 
 function restartRefreshLine() {
-  const line = $("refreshLine");
-  line.classList.remove("is-running");
-  void line.getBoundingClientRect(); // restart the CSS animation
-  line.style.animationDuration = `${refreshSeconds}s`;
-  line.classList.add("is-running");
+  ["refreshLine", "stageRefreshLine"].forEach((id) => {
+    const line = $(id);
+    line.classList.remove("is-running");
+    void line.getBoundingClientRect(); // restart the CSS animation
+    line.style.animationDuration = `${refreshSeconds}s`;
+    line.classList.add("is-running");
+  });
 }
 
 function tickClock() {
-  $("clock").textContent = timeOf(new Date());
+  const t = timeOf(new Date());
+  $("clock").textContent = t;
+  $("stageClock").textContent = t;
 }
 tickClock();
 setInterval(tickClock, 15000);
 
+// =============================================================================
+// Full screen: the energy flow as a wall display.
+// The same live elements go full screen, so they keep updating on every refresh.
+// =============================================================================
+const stage = $("stage");
+const fsBtn = $("fsBtn");
+const canNativeFs = Boolean(document.fullscreenEnabled && stage.requestFullscreen);
+let wakeLock = null;
+
+async function keepAwake(on) {
+  try {
+    if (on && "wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { /* not allowed or not supported: the display may dim, nothing else changes */ }
+}
+
+function setFullscreenState(on) {
+  stage.classList.toggle("is-fullscreen", on);
+  document.body.style.overflow = on ? "hidden" : "";
+  fsBtn.setAttribute("aria-pressed", String(on));
+  fsBtn.setAttribute("aria-label", on ? "Exit full screen" : "Show the energy flow full screen");
+  $("fsLabel").textContent = on ? "EXIT" : "FULL SCREEN";
+  // toasts follow the energy flow, so live events stay visible on the wall display
+  (on ? stage : document.body).append($("toasts"));
+  keepAwake(on);
+  if (on) {
+    Motion.show(stage.querySelector(".stage-bar"), { axis: "y", distance: -12 });
+    Motion.show(stage.querySelector(".flow"), { axis: "y", distance: 16, delay: 70 });
+  }
+  pulse(fsBtn);
+}
+
+async function toggleFullscreen() {
+  const on = !stage.classList.contains("is-fullscreen");
+  if (canNativeFs) {
+    try {
+      if (on) await stage.requestFullscreen({ navigationUI: "hide" });
+      else if (document.fullscreenElement) await document.exitFullscreen();
+      return; // fullscreenchange does the rest
+    } catch { /* fall back to the in-page version below */ }
+  }
+  setFullscreenState(on); // e.g. iPhone Safari: fills the window instead
+}
+
+fsBtn.addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", () => setFullscreenState(document.fullscreenElement === stage));
+document.addEventListener("keydown", (e) => {
+  // Esc already leaves native full screen; this covers the in-page fallback
+  if (e.key === "Escape" && stage.classList.contains("is-fullscreen") && !document.fullscreenElement) setFullscreenState(false);
+  if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !/input|textarea/i.test(e.target.tagName)) toggleFullscreen();
+});
+document.addEventListener("visibilitychange", () => {
+  // the browser drops the wake lock when the tab is hidden; take it back
+  if (document.visibilityState === "visible" && stage.classList.contains("is-fullscreen")) keepAwake(true);
+});
 // =============================================================================
 // Device values (opens with a fade-down, closes with a fade)
 // =============================================================================

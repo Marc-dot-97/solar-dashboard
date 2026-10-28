@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#2E3236" />
   <title><%= siteName %> · Energy · PrimeBridge</title>
+  <meta name="description" content="Live solar, battery and grid for <%= siteName %>, <%= siteAddress %>" />
   <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -62,10 +63,44 @@
       <div class="hero-head" data-reveal>
         <span class="accent-rule"></span>
         <h1>Your energy, live.</h1>
-        <p>Solar, battery, grid and home in one view. Every reading comes straight from your Victron system.</p>
+        <p>Solar, battery, grid and the building in one view. Every reading comes straight from the Victron system at <%= siteAddressShort %>.</p>
       </div>
 
-      <figure class="flow" data-reveal>
+      <!-- Stage: the energy flow, with its own full-screen mode (wall display) -->
+      <div class="stage" id="stage" data-reveal>
+        <div class="stage-bar">
+          <div class="app-logo">
+            <%- include("partials/brand-mark.ejs", { variant: "dark", uid: "stage" }) %>
+            <%- include("partials/brand-wordmark.ejs") %>
+          </div>
+          <span class="header-rule" aria-hidden="true"></span>
+          <div class="site">
+            <p class="site-name"><%= siteName %></p>
+            <p class="stage-address"><%= siteAddress %></p>
+          </div>
+          <div class="stage-meta">
+            <div class="status">
+              <span class="status-icon" id="stageStatusIcon"></span>
+              <span>
+                <span class="status-label" id="stageStatusText">Connecting</span>
+                <span class="status-time" id="stageStatusTime"></span>
+              </span>
+            </div>
+            <div class="clock">
+              <span class="eyebrow">LOCAL TIME</span>
+              <span id="stageClock">--:--</span>
+            </div>
+          </div>
+          <span class="refresh-line" id="stageRefreshLine" aria-hidden="true"></span>
+        </div>
+
+        <button class="icon-btn fs-btn" id="fsBtn" type="button" aria-pressed="false" aria-label="Show the energy flow full screen">
+          <span class="fs-icon fs-icon--enter"><%- include("partials/icon.ejs", { name: "expand" }) %></span>
+          <span class="fs-icon fs-icon--exit"><%- include("partials/icon.ejs", { name: "collapse" }) %></span>
+          <span class="fs-label" id="fsLabel">FULL SCREEN</span>
+        </button>
+
+      <figure class="flow">
         <svg class="flow-svg" viewBox="0 0 800 470" role="img" aria-labelledby="flowTitle flowSummary">
           <title id="flowTitle">Live energy flow</title>
           <desc id="flowSummary">Waiting for the first reading.</desc>
@@ -81,10 +116,11 @@
           <%- include("partials/flow-node.ejs", { id: "solar",    x: 315, y: 8,   icon: "sun",      label: "SOLAR",       tone: "lime" }) %>
           <%- include("partials/flow-node.ejs", { id: "grid",     x: 16,  y: 183, icon: "grid",     label: "GRID",        tone: "stone" }) %>
           <%- include("partials/flow-node.ejs", { id: "inverter", x: 325, y: 191, width: 150, height: 88, icon: "inverter", label: "INVERTER", tone: "stone" }) %>
-          <%- include("partials/flow-node.ejs", { id: "home",     x: 614, y: 183, icon: "home",     label: "CONSUMPTION", tone: "stone" }) %>
+          <%- include("partials/flow-node.ejs", { id: "home",     x: 614, y: 183, icon: "building", label: "CONSUMPTION", tone: "stone" }) %>
           <%- include("partials/flow-node.ejs", { id: "battery",  x: 315, y: 358, icon: "battery",  label: "BATTERY",     tone: "lime" }) %>
         </svg>
       </figure>
+      </div>
     </section>
 
     <!-- ===== Detail cards ===== -->
@@ -93,7 +129,7 @@
         { id: "solar",   icon: "sun",     label: "SOLAR" },
         { id: "battery", icon: "battery", label: "BATTERY" },
         { id: "grid",    icon: "grid",    label: "GRID" },
-        { id: "load",    icon: "home",    label: "CONSUMPTION" },
+        { id: "load",    icon: "building", label: "CONSUMPTION" },
       ]; %>
       <% cards.forEach((c) => { %>
       <article class="card card--<%= c.id %>" id="card-<%= c.id %>" data-reveal>
@@ -139,7 +175,7 @@
   </main>
 
   <footer class="app-footer">
-    <span>Hosted by Prime · Data from Victron VRM, installation <%= siteId %></span>
+    <span>Hosted by Prime · <%= siteName %>, <%= siteAddress %> · Data from Victron VRM, installation <%= siteId %></span>
     <span>Last reading <span id="lastReading">–</span></span>
   </footer>
 

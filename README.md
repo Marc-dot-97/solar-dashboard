@@ -1,11 +1,13 @@
-# Solar Dashboard – Pentagon Partners
+# Solar Dashboard – Optimum Financial Services Group
+
+Route 21 Corporate Park, 56 Regency Dr, Irene, Pretoria, 0157 · VRM installation 329491 (listed in VRM as "Pentagon Partners").
 
 One live page showing all the power in the Victron system (VRM installation **329491**). The VRM portal splits the numbers across several screens.
 
 - **Solar**: total, plus each MPPT (Solar Charger 278 and 279), plus kWh made today
 - **Battery**: state of charge, charging/discharging power, voltage, current, state
 - **Grid**: total import/export, plus each phase (L1, L2, L3)
-- **Consumption**: total house load, plus each phase, plus the inverter (VE.Bus) state
+- **Consumption**: total building load, plus each phase, plus the inverter (VE.Bus) state
 - **History**: a 24-hour chart, saved to MySQL every minute
 - **All device values**: every value VRM reports, grouped by device
 
@@ -61,6 +63,7 @@ The server is the only thing that talks to VRM. Your VRM token stays on the serv
   - Signal badges use a shape plus a colour: circle = OK/info, rhombus = warning, triangle = critical.
 - **Alert rules** live in `buildAlerts()` in `src/vrm.js`. The connection alerts are in `/api/live` in `index.js`.
 - **Reduce motion** is respected: nothing moves, but every state change still shows.
+- **Full screen**: the button on the energy flow puts it full screen for a wall display. It keeps updating live, keeps the screen awake, and Esc exits.
 
 ## Useful URLs
 

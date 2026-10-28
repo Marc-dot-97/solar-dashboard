@@ -38,7 +38,9 @@ app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.render("index.ejs", {
-    siteName: process.env.SITE_NAME || "Solar",
+    siteName: process.env.SITE_NAME || "Optimum Financial Services Group",
+    siteAddress: process.env.SITE_ADDRESS || "Route 21 Corporate Park, 56 Regency Dr, Irene, Pretoria, 0157",
+    siteAddressShort: process.env.SITE_ADDRESS_SHORT || "Route 21 Corporate Park, Irene",
     vrmUrl: `https://vrm.victronenergy.com/installation/${siteId}/dashboard`,
     siteId,
     refreshSeconds: browserRefreshSeconds,
