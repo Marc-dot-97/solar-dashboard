@@ -1,0 +1,24 @@
+<%
+/* One node in the energy-flow diagram.
+   The outer <g> places it; the inner .node-body is what animates (scale = state change),
+   because a CSS transform would otherwise replace the SVG translate. */
+const w = typeof width !== "undefined" ? width : 170;
+const h = typeof height !== "undefined" ? height : 104;
+const c = 14; // the one chamfered corner, same language as the login button
+%>
+<g id="pos-<%= id %>" transform="translate(<%= x %>,<%= y %>)">
+  <g class="node node--<%= tone %>" id="node-<%= id %>">
+    <polygon class="node-shape" points="0,0 <%= w - c %>,0 <%= w %>,<%= c %> <%= w %>,<%= h %> 0,<%= h %>" />
+    <g class="node-icon" transform="translate(16,14)"><%- include("icon.ejs", { name: icon }) %></g>
+    <text class="node-label" x="48" y="31"><%= label %></text>
+    <text class="node-value" id="<%= id %>-value" x="16" y="<%= id === "inverter" ? 62 : 72 %>">–</text>
+    <% if (id === "battery") { %>
+      <rect class="soc-track" x="16" y="80" width="<%= w - 32 %>" height="5" />
+      <rect class="soc-fill" id="soc-fill" x="16" y="80" width="<%= w - 32 %>" height="5" />
+      <rect class="soc-limit" id="soc-limit" x="16" y="77" width="2" height="11" />
+      <text class="node-sub" id="<%= id %>-sub" x="16" y="98"></text>
+    <% } else { %>
+      <text class="node-sub" id="<%= id %>-sub" x="16" y="<%= id === "inverter" ? 78 : 93 %>"></text>
+    <% } %>
+  </g>
+</g>

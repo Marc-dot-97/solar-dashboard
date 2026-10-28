@@ -1,80 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= siteName %> · Solar</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2E3236" />
+  <title><%= siteName %> · Energy · PrimeBridge</title>
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/motion/motion.css" />
   <link rel="stylesheet" href="/styles.css" />
+  <!-- hide reveal content only when JavaScript runs, so the page never stays blank -->
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
-  <header class="top">
-    <div>
-      <h1><%= siteName %></h1>
-      <p class="sub">VRM installation <%= siteId %> · refreshes every <%= refreshSeconds %>s</p>
+  <a class="skip-link" href="#main">Skip to the dashboard</a>
+
+  <!-- ===== Header ===== -->
+  <header class="app-header">
+    <div class="app-logo">
+      <%- include("partials/brand-mark.ejs", { variant: "dark", uid: "hdr" }) %>
+      <%- include("partials/brand-wordmark.ejs") %>
     </div>
-    <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></div>
+    <span class="header-rule" aria-hidden="true"></span>
+    <div class="site">
+      <p class="eyebrow">ENERGY</p>
+      <p class="site-name"><%= siteName %></p>
+    </div>
+
+    <div class="header-meta">
+      <div class="status" id="status" role="status">
+        <span class="status-icon" id="statusIcon"><%- include("partials/icon.ejs", { name: "signal-info" }) %></span>
+        <span>
+          <span class="status-label" id="statusText">Connecting</span>
+          <span class="status-time" id="statusTime">Waiting for the first reading</span>
+        </span>
+      </div>
+      <div class="clock" aria-label="Local time">
+        <span class="eyebrow">LOCAL TIME</span>
+        <span id="clock">--:--</span>
+      </div>
+      <button class="icon-btn" id="alertsBtn" type="button" aria-haspopup="dialog" aria-controls="drawer" aria-label="Alerts and events">
+        <%- include("partials/icon.ejs", { name: "bell" }) %>
+        <span class="badge-generic" id="alertBadge" hidden>0</span>
+      </button>
+      <a class="icon-btn" href="<%= vrmUrl %>" target="_blank" rel="noopener" aria-label="Open in VRM (new tab)">
+        <%- include("partials/icon.ejs", { name: "external" }) %>
+      </a>
+    </div>
+    <!-- feedback: shows the time until the next refresh -->
+    <span class="refresh-line" id="refreshLine" aria-hidden="true"></span>
   </header>
 
-  <main>
-    <div class="banner hidden" id="banner"></div>
+  <!-- ===== Global alerts (full width, brand grey, signal colour only in the shape) ===== -->
+  <div class="global-alerts" id="globalAlerts" aria-live="assertive"></div>
 
-    <!-- Headline tiles -->
-    <section class="tiles">
-      <article class="tile solar">
-        <h2>Solar</h2>
-        <div class="big" id="solarTotal">–</div>
-        <div class="meta">Today: <b id="solarYield">–</b></div>
-        <ul class="split" id="solarSplit"></ul>
-      </article>
+  <main id="main">
+    <!-- ===== Hero: live energy flow ===== -->
+    <section class="hero">
+      <div class="hero-head" data-reveal>
+        <span class="accent-rule"></span>
+        <h1>Your energy, live.</h1>
+        <p>Solar, battery, grid and home in one view. Every reading comes straight from your Victron system.</p>
+      </div>
 
-      <article class="tile battery">
-        <h2>Battery</h2>
-        <div class="big" id="batterySoc">–</div>
-        <div class="soc-bar"><div id="socFill"></div></div>
-        <div class="meta" id="batteryFlow">–</div>
-        <ul class="split">
-          <li><span>Voltage</span><b id="batteryV">–</b></li>
-          <li><span>Current</span><b id="batteryA">–</b></li>
-          <li><span>State</span><b id="batteryState">–</b></li>
-          <li><span>Health</span><b id="batteryHealth">–</b></li>
-          <li><span>Temperature</span><b id="batteryTemp">–</b></li>
-        </ul>
-      </article>
+      <figure class="flow" data-reveal>
+        <svg class="flow-svg" viewBox="0 0 800 470" role="img" aria-labelledby="flowTitle flowSummary">
+          <title id="flowTitle">Live energy flow</title>
+          <desc id="flowSummary">Waiting for the first reading.</desc>
 
-      <article class="tile grid">
-        <h2>Grid</h2>
-        <div class="big" id="gridTotal">–</div>
-        <div class="meta" id="gridFlow">–</div>
-        <ul class="split" id="gridSplit"></ul>
-      </article>
+          <!-- wires (static) and flows (animated, only H or V) -->
+          <% [["solar","M400 112 V191"],["grid","M186 235 H325"],["home","M475 235 H614"],["battery","M400 279 V358"]].forEach(([id, d]) => { %>
+          <path class="wire" id="wire-<%= id %>" d="<%= d %>" />
+          <% }) %>
+          <% ["solar","grid","home","battery"].forEach((id) => { %>
+          <path class="flow-line flow-line--<%= id %>" id="flow-<%= id %>" d="" />
+          <% }) %>
 
-      <article class="tile load">
-        <h2>Consumption</h2>
-        <div class="big" id="loadTotal">–</div>
-        <div class="meta">Inverter: <b id="inverterState">–</b></div>
-        <ul class="split" id="loadSplit"></ul>
+          <%- include("partials/flow-node.ejs", { id: "solar",    x: 315, y: 8,   icon: "sun",      label: "SOLAR",       tone: "lime" }) %>
+          <%- include("partials/flow-node.ejs", { id: "grid",     x: 16,  y: 183, icon: "grid",     label: "GRID",        tone: "stone" }) %>
+          <%- include("partials/flow-node.ejs", { id: "inverter", x: 325, y: 191, width: 150, height: 88, icon: "inverter", label: "INVERTER", tone: "stone" }) %>
+          <%- include("partials/flow-node.ejs", { id: "home",     x: 614, y: 183, icon: "home",     label: "CONSUMPTION", tone: "stone" }) %>
+          <%- include("partials/flow-node.ejs", { id: "battery",  x: 315, y: 358, icon: "battery",  label: "BATTERY",     tone: "lime" }) %>
+        </svg>
+      </figure>
+    </section>
+
+    <!-- ===== Detail cards ===== -->
+    <section class="cards" aria-label="Details">
+      <% const cards = [
+        { id: "solar",   icon: "sun",     label: "SOLAR" },
+        { id: "battery", icon: "battery", label: "BATTERY" },
+        { id: "grid",    icon: "grid",    label: "GRID" },
+        { id: "load",    icon: "home",    label: "CONSUMPTION" },
+      ]; %>
+      <% cards.forEach((c) => { %>
+      <article class="card card--<%= c.id %>" id="card-<%= c.id %>" data-reveal>
+        <header class="card-head">
+          <span class="card-icon"><%- include("partials/icon.ejs", { name: c.icon }) %></span>
+          <h2><%= c.label %></h2>
+          <span class="card-signal" id="<%= c.id %>-signal"></span>
+        </header>
+        <p class="card-value"><span class="skeleton" id="<%= c.id %>-big">&nbsp;</span></p>
+        <p class="card-sub" id="<%= c.id %>-text"><span class="skeleton skeleton--short">&nbsp;</span></p>
+        <svg class="spark" id="<%= c.id %>-spark" viewBox="0 0 300 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <ul class="card-list" id="<%= c.id %>-list"></ul>
+        <div class="card-alerts" id="<%= c.id %>-alerts"></div>
       </article>
+      <% }) %>
     </section>
 
     <% if (historyEnabled) { %>
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Last 24 hours</h2>
+    <section class="panel" data-scroll-reveal>
+      <header class="panel-head">
+        <div>
+          <span class="accent-rule"></span>
+          <h2>The last 24 hours</h2>
+        </div>
         <span class="hint">Saved to MySQL every minute</span>
-      </div>
-      <div class="chart-box"><canvas id="historyChart"></canvas></div>
+      </header>
+      <div class="chart-box"><canvas id="historyChart" aria-label="Power over the last 24 hours" role="img"></canvas></div>
     </section>
     <% } %>
 
-    <section class="panel">
-      <details>
-        <summary>All device values from VRM</summary>
-        <div id="devices" class="devices"></div>
-      </details>
+    <section class="panel" data-scroll-reveal>
+      <header class="panel-head">
+        <div>
+          <span class="accent-rule"></span>
+          <h2>Every value from VRM</h2>
+        </div>
+        <button class="btn btn--ghost" id="devicesBtn" type="button" aria-expanded="false" aria-controls="devices">
+          <span id="devicesBtnText">SHOW</span><%- include("partials/icon.ejs", { name: "chevron-down" }) %>
+        </button>
+      </header>
+      <div class="devices" id="devices" hidden></div>
     </section>
   </main>
 
-  <footer>Last VRM reading: <span id="lastReading">–</span></footer>
+  <footer class="app-footer">
+    <span>Hosted by Prime · Data from Victron VRM, installation <%= siteId %></span>
+    <span>Last reading <span id="lastReading">–</span></span>
+  </footer>
+
+  <!-- ===== Overlay notifications (toasts) ===== -->
+  <div class="toasts" id="toasts" aria-live="polite" aria-relevant="additions"></div>
+
+  <!-- ===== Alerts drawer (superimposed, slides in horizontally) ===== -->
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+    <header class="drawer-head">
+      <h2 id="drawerTitle">Alerts &amp; events</h2>
+      <button class="icon-btn" id="drawerClose" type="button" aria-label="Close">
+        <%- include("partials/icon.ejs", { name: "close" }) %>
+      </button>
+    </header>
+    <h3 class="eyebrow">ACTIVE NOW</h3>
+    <ul class="drawer-list" id="drawerAlerts"></ul>
+    <h3 class="eyebrow">TODAY'S EVENTS</h3>
+    <ul class="drawer-list" id="drawerEvents"></ul>
+  </aside>
 
   <script>
     window.DASHBOARD = { refreshSeconds: <%= refreshSeconds %>, historyEnabled: <%= historyEnabled %> };
@@ -82,6 +167,7 @@
   <% if (historyEnabled) { %>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <% } %>
+  <script src="/motion/motion.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

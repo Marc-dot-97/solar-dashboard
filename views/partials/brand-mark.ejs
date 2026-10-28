@@ -1,0 +1,9 @@
+<%
+/* PrimeBridge mark (official artwork, background removed).
+   variant "dark"  = for charcoal backgrounds (bright lime gradient + stone bar)
+   variant "light" = for stone/light backgrounds (standard lime gradient + charcoal bar)
+   Never place the full-colour mark on the lime field: use the wordmark in charcoal there. */
+const v = (typeof variant !== "undefined" && variant === "light") ? "light" : "dark";
+const g = v === "dark" ? ["#E4F79A","#B5E03F","#7FAE24","#E6E3DD"] : ["#C9EE5E","#9BC53D","#6F9A22","#2E3236"];
+const gid = "pb-lime-" + v + "-" + (typeof uid !== "undefined" ? uid : "1");
+%><svg class="pb-mark" viewBox="14.2 14.2 103.4 213.8" role="img" aria-label="PrimeBridge" focusable="false"><defs><linearGradient id="<%= gid %>" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="<%= g[0] %>"/><stop offset="0.5" stop-color="<%= g[1] %>"/><stop offset="1" stop-color="<%= g[2] %>"/></linearGradient></defs><polygon points="39.8,27.4 57.4,14.2 117.6,94.47 117.6,131.13" fill="url(#<%= gid %>)"/><polygon points="72,228 94,228 94,116.33 31.8,33.4 14.2,46.6 72,123.67" fill="<%= g[3] %>"/><polygon points="40,97.67 62,127 62,228 40,228" fill="url(#<%= gid %>)"/></svg>

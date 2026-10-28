@@ -39,6 +39,7 @@ app.use(express.static("public"));
 app.get("/", (req, res) => {
   res.render("index.ejs", {
     siteName: process.env.SITE_NAME || "Solar",
+    vrmUrl: `https://vrm.victronenergy.com/installation/${siteId}/dashboard`,
     siteId,
     refreshSeconds: browserRefreshSeconds,
     historyEnabled: db.isActive(),
@@ -50,7 +51,21 @@ app.get("/api/live", (req, res) => {
   if (!latest) {
     return res.status(503).json({ ok: false, error: lastError || "Waiting for the first reading from VRM..." });
   }
-  res.json({ ok: true, stale: Boolean(lastError), lastError, ...latest });
+  // Connection alerts sit on top of the system alerts from VRM
+  const alerts = [...latest.alerts];
+  const ageMinutes = (Date.now() / 1000 - latest.timestamp) / 60;
+  if (lastError) {
+    alerts.unshift({
+      id: "vrm-unreachable", level: "warning", scope: "global", title: "VRM is out of reach",
+      message: "You're seeing the last reading we received. We keep trying and update the moment VRM answers.",
+    });
+  } else if (ageMinutes > 5) {
+    alerts.unshift({
+      id: "cerbo-quiet", level: "warning", scope: "global", title: "Your system has gone quiet",
+      message: `The Cerbo GX last reported ${Math.round(ageMinutes)} minutes ago. Check its internet connection.`,
+    });
+  }
+  res.json({ ok: true, stale: Boolean(lastError), lastError, ...latest, alerts });
 });
 
 // History for the chart

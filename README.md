@@ -48,6 +48,20 @@ The server is the only thing that talks to VRM. Your VRM token stays on the serv
    ```
 5. Open http://localhost:3000
 
+## Design (PrimeBridge brand + Motion Kit)
+
+- Brand tokens, logo partials (`views/partials/brand-*.ejs`) and the favicon come from `C:\Dev\prime-login`. Don't edit the logo; take updates from there.
+- `public/motion/motion.css` and `motion.js` are the **PrimeBridge Motion Kit**, copied as-is from prime-login. Every animation uses `Motion.*`.
+- **Energy flow** (`views/index.ejs` + `views/partials/flow-node.ejs`): the dashes move along horizontal/vertical wires only, the speed follows the power, and idle wires fade out. A node gives a short scale pulse when its value changes noticeably. Phones get a compact 2 × 2 layout (`LAYOUTS` in `public/app.js`).
+- **Notifications**:
+  - Global alerts are full width in brand grey. Errors stay until they're solved; warnings can be dismissed.
+  - Container alerts sit inside a card.
+  - Toasts appear lower right and hide after 7 seconds.
+  - The bell carries a red generic badge with a count.
+  - Signal badges use a shape plus a colour: circle = OK/info, rhombus = warning, triangle = critical.
+- **Alert rules** live in `buildAlerts()` in `src/vrm.js`. The connection alerts are in `/api/live` in `index.js`.
+- **Reduce motion** is respected: nothing moves, but every state change still shows.
+
 ## Useful URLs
 
 - `/api/health`: whether VRM and MySQL are OK
