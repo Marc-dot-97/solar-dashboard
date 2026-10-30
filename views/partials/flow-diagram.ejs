@@ -1,0 +1,24 @@
+<%
+/* The full live energy-flow diagram. Include it with a unique prefix per diagram:
+     include("partials/flow-diagram.ejs", { prefix: "s329491-" })
+   public/flow.js (EnergyFlow.create) brings it to life. */
+const p = typeof prefix !== "undefined" ? prefix : "";
+%>
+<svg class="flow-svg" viewBox="0 0 800 470" role="img" aria-labelledby="<%= p %>flowTitle <%= p %>flowSummary">
+  <title id="<%= p %>flowTitle">Live energy flow<%= typeof label !== "undefined" ? ` – ${label}` : "" %></title>
+  <desc id="<%= p %>flowSummary" data-k="summary">Waiting for the first reading.</desc>
+
+  <!-- wires (static) and flows (animated, only horizontal or vertical) -->
+  <% ["solar", "grid", "home", "battery"].forEach((id) => { %>
+  <path class="wire" data-k="wire-<%= id %>" d="" />
+  <% }) %>
+  <% ["solar", "grid", "home", "battery"].forEach((id) => { %>
+  <path class="flow-line flow-line--<%= id %>" data-k="flow-<%= id %>" d="" />
+  <% }) %>
+
+  <%- include("flow-node.ejs", { prefix: p, id: "solar",    x: 315, y: 8,   icon: "sun",      label: "SOLAR",       tone: "lime" }) %>
+  <%- include("flow-node.ejs", { prefix: p, id: "grid",     x: 16,  y: 183, icon: "grid",     label: "GRID",        tone: "stone" }) %>
+  <%- include("flow-node.ejs", { prefix: p, id: "inverter", x: 325, y: 191, width: 150, height: 88, icon: "inverter", label: "INVERTER", tone: "stone" }) %>
+  <%- include("flow-node.ejs", { prefix: p, id: "home",     x: 614, y: 183, icon: "building", label: "CONSUMPTION", tone: "stone" }) %>
+  <%- include("flow-node.ejs", { prefix: p, id: "battery",  x: 315, y: 358, icon: "battery",  label: "BATTERY",     tone: "lime" }) %>
+</svg>

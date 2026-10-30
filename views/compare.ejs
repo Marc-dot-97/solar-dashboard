@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2E3236" />
+  <title>Side by side · Energy · PrimeBridge</title>
+  <meta name="description" content="Live solar, battery and grid for <%= sites.map((s) => s.label).join(" and ") %>, side by side" />
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/motion/motion.css" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body class="page-compare" data-refresh-seconds="<%= refreshSeconds %>">
+  <a class="skip-link" href="#main">Skip to the dashboard</a>
+
+  <!-- ===== Header ===== -->
+  <header class="app-header">
+    <div class="app-logo">
+      <%- include("partials/brand-mark.ejs", { variant: "dark", uid: "hdr" }) %>
+      <%- include("partials/brand-wordmark.ejs") %>
+    </div>
+    <span class="header-rule" aria-hidden="true"></span>
+    <div class="site">
+      <p class="eyebrow">ENERGY</p>
+      <p class="site-name"><%= siteName %></p>
+    </div>
+    <%- include("partials/site-nav.ejs", { sites, active: "compare" }) %>
+
+    <div class="header-meta">
+      <div class="status" role="status">
+        <span class="status-icon" id="statusIcon"><%- include("partials/icon.ejs", { name: "signal-info" }) %></span>
+        <span>
+          <span class="status-label" id="statusText">Connecting</span>
+          <span class="status-time" id="statusTime">Waiting for the first reading</span>
+        </span>
+      </div>
+      <div class="clock">
+        <span class="eyebrow">LOCAL TIME</span>
+        <span id="clock">--:--</span>
+      </div>
+    </div>
+    <span class="refresh-line" id="refreshLine" aria-hidden="true"></span>
+  </header>
+
+  <div class="global-alerts" id="globalAlerts" aria-live="assertive"></div>
+
+  <main id="main">
+    <div class="hero-head hero-head--compare" data-reveal>
+      <span class="accent-rule"></span>
+      <p class="eyebrow">SIDE BY SIDE</p>
+      <h1>Two systems, one view.</h1>
+      <p><%= sites.map((s) => s.label).join(" and ") %>, live from VRM. The totals add both together, so you see the whole picture at <%= siteAddressShort %>.</p>
+    </div>
+
+    <!-- Stage: everything below can go full screen as a wall display -->
+    <div class="stage stage--compare" id="stage" data-reveal>
+      <div class="stage-bar">
+        <div class="app-logo">
+          <%- include("partials/brand-mark.ejs", { variant: "dark", uid: "stage" }) %>
+          <%- include("partials/brand-wordmark.ejs") %>
+        </div>
+        <span class="header-rule" aria-hidden="true"></span>
+        <div class="site">
+          <p class="site-name"><%= sites.map((s) => s.label).join(" · ") %></p>
+          <p class="stage-address"><%= siteName %> · <%= siteAddress %></p>
+        </div>
+        <div class="stage-meta">
+          <div class="status">
+            <span class="status-icon" id="stageStatusIcon"></span>
+            <span>
+              <span class="status-label" id="stageStatusText">Connecting</span>
+              <span class="status-time" id="stageStatusTime"></span>
+            </span>
+          </div>
+          <div class="clock">
+            <span class="eyebrow">LOCAL TIME</span>
+            <span id="stageClock">--:--</span>
+          </div>
+        </div>
+        <span class="refresh-line" id="stageRefreshLine" aria-hidden="true"></span>
+      </div>
+
+      <button class="icon-btn fs-btn" id="fsBtn" type="button" aria-pressed="false" aria-label="Show both systems full screen">
+        <span class="fs-icon fs-icon--enter"><%- include("partials/icon.ejs", { name: "expand" }) %></span>
+        <span class="fs-icon fs-icon--exit"><%- include("partials/icon.ejs", { name: "collapse" }) %></span>
+        <span class="fs-label" id="fsLabel">FULL SCREEN</span>
+      </button>
+
+      <!-- Combined totals across both installations -->
+      <section class="totals" aria-label="Both systems together">
+        <% [
+          ["solar", "sun", "SOLAR · BOTH"],
+          ["battery", "battery", "BATTERY · AVERAGE"],
+          ["grid", "grid", "GRID · BOTH"],
+          ["load", "building", "CONSUMPTION · BOTH"],
+        ].forEach(([key, icon, label]) => { %>
+        <div class="total total--<%= key %>">
+          <span class="total-icon"><%- include("partials/icon.ejs", { name: icon }) %></span>
+          <div>
+            <p class="total-label"><%= label %></p>
+            <p class="total-value" id="total-<%= key %>"><span class="skeleton">&nbsp;</span></p>
+            <p class="total-sub" id="total-<%= key %>-sub">&nbsp;</p>
+          </div>
+        </div>
+        <% }) %>
+      </section>
+
+      <!-- One panel per installation -->
+      <div class="compare-grid">
+        <% sites.forEach((s) => { %>
+        <section class="site-panel" data-site="<%= s.id %>" aria-labelledby="title-<%= s.id %>">
+          <header class="site-panel-head">
+            <div>
+              <p class="eyebrow">VRM <%= s.id %></p>
+              <h2 id="title-<%= s.id %>"><%= s.label %></h2>
+            </div>
+            <div class="site-panel-status">
+              <span class="status-icon" data-k="status-icon"></span>
+              <span>
+                <span class="status-label" data-k="status-text">Connecting</span>
+                <span class="status-time" data-k="status-time"></span>
+              </span>
+            </div>
+            <a class="icon-btn" href="/?site=<%= s.id %>" aria-label="Open <%= s.label %> in detail">
+              <%- include("partials/icon.ejs", { name: "arrow-right" }) %>
+            </a>
+            <a class="icon-btn" href="<%= vrmUrl(s.id) %>" target="_blank" rel="noopener" aria-label="Open <%= s.label %> in VRM (new tab)">
+              <%- include("partials/icon.ejs", { name: "external" }) %>
+            </a>
+          </header>
+
+          <figure class="flow">
+            <%- include("partials/flow-diagram.ejs", { prefix: `s${s.id}-`, label: s.label }) %>
+          </figure>
+
+          <ul class="facts" data-k="facts"></ul>
+          <div class="card-alerts" data-k="alerts"></div>
+        </section>
+        <% }) %>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <span>Hosted by Prime · <%= siteName %>, <%= siteAddress %> · Data from Victron VRM</span>
+    <span>Last reading <span id="lastReading">–</span></span>
+  </footer>
+
+  <div class="toasts" id="toasts" aria-live="polite" aria-relevant="additions"></div>
+
+  <script src="/motion/motion.js"></script>
+  <script src="/flow.js"></script>
+  <script src="/compare.js"></script>
+</body>
+</html>

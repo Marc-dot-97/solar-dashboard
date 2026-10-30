@@ -6,6 +6,7 @@
 // Settings come from data- attributes on <body> (set by the server in views/index.ejs)
 const refreshSeconds = Number(document.body.dataset.refreshSeconds) || 15;
 const historyEnabled = document.body.dataset.historyEnabled === "true";
+const siteId = document.body.dataset.siteId;
 const $ = (id) => document.getElementById(id);
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -35,109 +36,11 @@ const closeIcon = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><pat
 const RANK = { ok: 0, info: 1, warning: 2, error: 3 };
 
 // =============================================================================
-// Energy flow (SVG)
-// Two layouts, both with only horizontal and vertical wires:
-//   wide    – grid | inverter | consumption in a row, solar above, battery below
-//   compact – a 2 × 2 grid around the inverter, readable on a phone
+// Energy flow (SVG) — drawn and animated by public/flow.js (shared with /side-by-side)
 // =============================================================================
-const LAYOUTS = {
-  wide: {
-    viewBox: "0 0 800 470",
-    nodes: { solar: [315, 8], grid: [16, 183], inverter: [325, 191], home: [614, 183], battery: [315, 358] },
-    wires: { solar: "M400 112 V191", grid: "M186 235 H325", home: "M475 235 H614", battery: "M400 279 V358" },
-  },
-  compact: {
-    viewBox: "0 0 380 392",
-    nodes: { solar: [0, 0], grid: [210, 0], inverter: [115, 150], home: [210, 286], battery: [0, 286] },
-    wires: { solar: "M85 104 V176 H115", grid: "M295 104 V176 H265", home: "M265 214 H295 V286", battery: "M115 214 H85 V286" },
-  },
-};
-const compactQuery = window.matchMedia("(max-width: 720px)");
-function applyLayout() {
-  const L = compactQuery.matches ? LAYOUTS.compact : LAYOUTS.wide;
-  document.querySelector(".flow-svg").setAttribute("viewBox", L.viewBox);
-  Object.entries(L.nodes).forEach(([id, [x, y]]) => $(`pos-${id}`).setAttribute("transform", `translate(${x},${y})`));
-  Object.entries(L.wires).forEach(([id, d]) => {
-    $(`wire-${id}`).setAttribute("d", d);
-    $(`flow-${id}`).setAttribute("d", d);
-  });
-}
-applyLayout();
-compactQuery.addEventListener("change", applyLayout);
-// Speed follows power: idle lines are hidden, busy lines move faster (Rule 4: timing has meaning)
-function setFlow(id, power, forward) {
-  const line = $(`flow-${id}`);
-  const active = power !== null && Math.abs(power) > IDLE;
-  line.classList.toggle("is-active", active);
-  line.classList.toggle("is-reverse", active && !forward);
-  if (active) {
-    const pxPerSec = Math.min(160, 24 + Math.abs(power) / 30); // 0.1 kW ≈ 27px/s … 4 kW ≈ 157px/s
-    line.style.setProperty("--flow-dur", `${(20 / pxPerSec).toFixed(2)}s`);
-  }
-  return active;
-}
-
-// A node pulses with a short scale when its value changes noticeably (Rule 2: state change = scaling)
-const lastNodeValue = {};
-function setNode(id, valueText, subText, power, active) {
-  const node = $(`node-${id}`);
-  const valueEl = $(`${id}-value`);
-  const changed = valueEl.textContent !== valueText;
-  valueEl.textContent = valueText;
-  $(`${id}-sub`).textContent = subText;
-  node.classList.toggle("is-active", Boolean(active));
-
-  const prev = lastNodeValue[id];
-  lastNodeValue[id] = power;
-  if (changed && prev !== undefined && power !== null && prev !== null) {
-    const delta = Math.abs(power - prev);
-    if (delta > 100 && delta > Math.abs(prev) * 0.1) pulse(node);
-  }
-}
-async function pulse(el) {
-  await Motion.changeState(el, { scale: 1.035, duration: 160 });
-  await Motion.changeState(el, { scale: 1, duration: 200 });
-}
-
-function renderFlow(d) {
-  const solar = d.solar.total ?? 0;
-  const grid = d.grid.total ?? 0;
-  const load = d.load.total ?? 0;
-  const bp = d.battery.power ?? 0;
-
-  const solarOn = setFlow("solar", solar, true);
-  const gridOn = setFlow("grid", grid, grid > 0);       // import: grid → inverter
-  const homeOn = setFlow("home", load, true);
-  const battOn = setFlow("battery", bp, bp > 0);         // charging: inverter → battery
-
-  setNode("solar", watts(solar), `Today ${fixed(d.solar.yieldTodayKwh, 1, "kWh")}`, solar, solarOn);
-  setNode("grid", watts(Math.abs(grid)), grid > IDLE ? "Importing" : grid < -IDLE ? "Exporting" : "Balanced", grid, gridOn);
-  setNode("home", watts(load), `Essential ${watts(d.load.essential)}`, load, homeOn);
-  setNode("inverter", d.inverter.state ?? "–", d.inverter.systemState ?? "", null, true);
-
-  const soc = d.battery.soc;
-  setNode(
-    "battery",
-    soc === null ? "–" : `${Math.round(soc)}%`,
-    bp > IDLE ? `Charging ${watts(bp)}` : bp < -IDLE ? `Discharging ${watts(-bp)}` : "Idle",
-    bp,
-    battOn
-  );
-  // SOC bar: the fill scales to the new level (state change = scaling)
-  const fill = $("soc-fill");
-  fill.style.transform = `scaleX(${Math.max(0, Math.min(100, soc ?? 0)) / 100})`;
-  const limit = $("soc-limit");
-  if (d.battery.socLimit !== null) {
-    limit.setAttribute("x", 16 + (138 * d.battery.socLimit) / 100 - 1);
-    limit.classList.add("is-set");
-  }
-
-  // Screen-reader summary of the picture
-  $("flowSummary").textContent =
-    `Solar ${watts(solar)}. Grid ${grid > IDLE ? "importing" : grid < -IDLE ? "exporting" : "balanced"} ${watts(Math.abs(grid))}. ` +
-    `Consumption ${watts(load)}. Battery ${soc === null ? "unknown" : Math.round(soc) + "%"}, ` +
-    `${bp > IDLE ? "charging" : bp < -IDLE ? "discharging" : "idle"} ${watts(Math.abs(bp))}.`;
-}
+const flow = EnergyFlow.create(document.querySelector(".flow-svg"));
+const renderFlow = (d) => flow.render(d);
+async function pulse(el) { return EnergyFlow.pulse(el); }
 
 // =============================================================================
 // Cards
@@ -481,7 +384,7 @@ async function refresh() {
   restartRefreshLine();
   let data;
   try {
-    const res = await fetch("/api/live", { cache: "no-store" });
+    const res = await fetch(`/api/live?site=${siteId}`, { cache: "no-store" });
     data = await res.json();
   } catch {
     setStatus("error", "Offline", "The dashboard server isn't answering");
@@ -557,7 +460,7 @@ async function loadHistory() {
   if (!historyEnabled) return;
   let rows;
   try {
-    const res = await fetch("/api/history?hours=24", { cache: "no-store" });
+    const res = await fetch(`/api/history?site=${siteId}&hours=24`, { cache: "no-store" });
     ({ rows } = await res.json());
   } catch { return; }
   if (!rows) return;

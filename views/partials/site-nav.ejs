@@ -1,0 +1,12 @@
+<%
+/* Switch between the installations and the side-by-side view.
+   active = a site id (number) or "compare". The current one is marked for screen readers. */
+%>
+<nav class="site-nav" aria-label="Installations">
+  <% sites.forEach((s) => { %>
+  <a href="/?site=<%= s.id %>" <%- active === s.id ? 'aria-current="page"' : "" %>><%= s.label %></a>
+  <% }) %>
+  <% if (sites.length > 1) { %>
+  <a href="/side-by-side" <%- active === "compare" ? 'aria-current="page"' : "" %>>Side by side</a>
+  <% } %>
+</nav>

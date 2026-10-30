@@ -3,11 +3,10 @@
 
 const BASE_URL = "https://vrmapi.victronenergy.com/v2";
 
-export async function fetchSnapshot() {
-  const siteId = process.env.VRM_SITE_ID;
+export async function fetchSnapshot(siteId) {
   const token = process.env.VRM_TOKEN;
   if (!siteId || !token) {
-    throw new Error("VRM_SITE_ID and VRM_TOKEN must be set in your .env file");
+    throw new Error("VRM_TOKEN and a site id (VRM_SITES or VRM_SITE_ID) must be set in your .env file");
   }
 
   const response = await fetch(`${BASE_URL}/installations/${siteId}/diagnostics?count=1000`, {

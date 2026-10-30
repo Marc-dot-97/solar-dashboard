@@ -397,3 +397,99 @@ main { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 32px va
   .refresh-line { display: none; }
   .soc-fill, .node-shape, .flow-line, .skip-link { transition: none; }
 }
+
+/* =============================================================================
+   Site switcher (header) — Pentagon Partners · Westside Tradings · Side by side
+   ============================================================================= */
+.site-nav { display: flex; gap: 4px; margin-left: 12px; }
+.site-nav a {
+  position: relative;
+  display: inline-flex; align-items: center;
+  height: 40px; padding: 0 14px; white-space: nowrap;
+  font-size: 13px; font-weight: 700; color: var(--text-muted); text-decoration: none;
+  transition: color var(--motion-s) var(--ease-state), background var(--motion-s) var(--ease-state);
+}
+.site-nav a::after {                     /* lime underline that scales in on the current one */
+  content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px;
+  background: var(--lime); transform: scaleX(0); transform-origin: left;
+  transition: transform var(--motion-m) var(--ease-in-view);
+}
+.site-nav a:hover { color: var(--text); background: var(--charcoal-raised); }
+.site-nav a[aria-current="page"] { color: var(--stone); }
+.site-nav a[aria-current="page"]::after { transform: scaleX(1); }
+.hero-site { margin-bottom: 8px; color: var(--lime-bright); }
+
+/* =============================================================================
+   Side by side
+   ============================================================================= */
+.hero-head--compare { max-width: 760px; margin-bottom: 28px; }
+.hero-head--compare .eyebrow { margin-bottom: 8px; color: var(--lime-bright); }
+.hero-head--compare p:last-child { max-width: 60ch; }
+.stage--compare .fs-btn { top: -60px; }
+
+.totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.total {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 18px 20px;
+  background: var(--charcoal-raised);
+  border-top: 3px solid var(--line);
+  clip-path: polygon(0 0, calc(100% - var(--chamfer-s)) 0, 100% var(--chamfer-s), 100% 100%, 0 100%);
+}
+.total--solar, .total--battery { border-top-color: var(--lime); }
+.total--grid, .total--load { border-top-color: var(--stone); }
+.total-icon { display: grid; color: var(--text-label); margin-top: 2px; }
+.total--solar .total-icon, .total--battery .total-icon { color: var(--lime-bright); }
+.total-label { font-size: 11px; font-weight: 800; letter-spacing: 0.16em; color: var(--text-muted); }
+.total-value { margin-top: 6px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.total-sub { margin-top: 2px; font-size: 12px; color: var(--text-muted); }
+.total-sub b { color: var(--text); font-weight: 700; }
+
+.compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.site-panel {
+  display: flex; flex-direction: column; min-width: 0;
+  padding: 20px;
+  background: var(--charcoal-raised);
+  clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+}
+.site-panel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.site-panel-head > div:first-child { flex: 1; min-width: 0; }
+.site-panel-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.site-panel-status { display: flex; align-items: center; gap: 8px; margin-right: 4px; }
+.site-panel-status .status-icon .icon { width: 16px; height: 16px; }
+.site-panel .flow { background: var(--charcoal); padding: 12px; }
+.site-panel .node-shape { fill: var(--charcoal-raised); }
+.facts {
+  list-style: none; margin: 14px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 20px;
+  border-top: 1px solid var(--line-soft);
+}
+.facts li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; font-size: 13px; border-bottom: 1px solid var(--line-soft); }
+.facts span { color: var(--text-muted); }
+.facts b { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Full screen: totals on top, both diagrams fill the rest */
+.stage--compare.is-fullscreen { grid-template-rows: auto auto minmax(0, 1fr); }
+.stage--compare.is-fullscreen .fs-btn { top: clamp(14px, 2.4vh, 28px); }
+.stage--compare.is-fullscreen .totals { margin-bottom: 0; }
+.stage--compare.is-fullscreen .total { padding: 12px 18px; }
+.stage--compare.is-fullscreen .compare-grid { min-height: 0; margin-top: clamp(10px, 1.6vh, 16px); }
+.stage--compare.is-fullscreen .site-panel { min-height: 0; padding: 14px 16px; }
+.stage--compare.is-fullscreen .site-panel .flow { flex: 1; min-height: 0; padding: 8px; }
+.stage--compare.is-fullscreen .facts,
+.stage--compare.is-fullscreen .card-alerts { display: none; }   /* a wall display shows the flows, details stay on the page */
+
+@media (max-width: 1280px) {
+  .site-nav { order: 10; width: 100%; margin-left: 0; overflow-x: auto; }
+}
+@media (max-width: 1100px) {
+  .totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compare-grid { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .total-value { font-size: 24px; }
+  .facts { grid-template-columns: 1fr; }
+  .stage--compare .fs-btn { top: -52px; }
+  .site-panel { padding: 16px; }
+  .site-panel .flow { padding: 6px; }
+}

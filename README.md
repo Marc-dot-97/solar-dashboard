@@ -1,6 +1,19 @@
 # Solar Dashboard – Optimum Financial Services Group
 
-Route 21 Corporate Park, 56 Regency Dr, Irene, Pretoria, 0157 · VRM installation 329491 (listed in VRM as "Pentagon Partners").
+Route 21 Corporate Park, 56 Regency Dr, Irene, Pretoria, 0157 · two VRM installations:
+
+| VRM id | Name in VRM | Detail page |
+| --- | --- | --- |
+| 329491 | Pentagon Partners 15QU, 18x545, 3x4.8PT | `/?site=329491` |
+| 327307 | Westside Tradings 15QU, 18x545, 3x4.8PT | `/?site=327307` |
+
+**Side by side:** `/side-by-side` shows both live energy flows next to each other, with combined totals, alerts per site and a full-screen wall-display mode.
+
+Set the installations in `.env`:
+
+```
+VRM_SITES=329491=Pentagon Partners;327307=Westside Tradings
+```
 
 One live page showing all the power in the Victron system (VRM installation **329491**). The VRM portal splits the numbers across several screens.
 
@@ -67,9 +80,10 @@ The server is the only thing that talks to VRM. Your VRM token stays on the serv
 
 ## Useful URLs
 
-- `/api/health`: whether VRM and MySQL are OK
-- `/api/live`: the live JSON the page uses
-- `/api/history?hours=24`: saved readings
+- `/api/health`: whether VRM (per site) and MySQL are OK
+- `/api/live?site=327307`: the live JSON for one site
+- `/api/live/all`: every site at once (used by the side-by-side page)
+- `/api/history?site=327307&hours=24`: saved readings for one site
 
 ## Notes
 

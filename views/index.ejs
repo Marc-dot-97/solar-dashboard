@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#2E3236" />
-  <title><%= siteName %> · Energy · PrimeBridge</title>
+  <title><%= siteLabel %> · Energy · PrimeBridge</title>
   <meta name="description" content="Live solar, battery and grid for <%= siteName %>, <%= siteAddress %>" />
   <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,7 +15,7 @@
   <!-- hide reveal content only when JavaScript runs, so the page never stays blank -->
   <script>document.documentElement.classList.add("js");</script>
 </head>
-<body data-refresh-seconds="<%= refreshSeconds %>" data-history-enabled="<%= historyEnabled %>">
+<body data-site-id="<%= siteId %>" data-refresh-seconds="<%= refreshSeconds %>" data-history-enabled="<%= historyEnabled %>">
   <a class="skip-link" href="#main">Skip to the dashboard</a>
 
   <!-- ===== Header ===== -->
@@ -29,6 +29,7 @@
       <p class="eyebrow">ENERGY</p>
       <p class="site-name"><%= siteName %></p>
     </div>
+    <%- include("partials/site-nav.ejs", { sites, active: siteId }) %>
 
     <div class="header-meta">
       <div class="status" id="status" role="status">
@@ -62,6 +63,7 @@
     <section class="hero">
       <div class="hero-head" data-reveal>
         <span class="accent-rule"></span>
+        <p class="eyebrow hero-site"><%= siteLabel.toUpperCase() %></p>
         <h1>Your energy, live.</h1>
         <p>Solar, battery, grid and the building in one view. Every reading comes straight from the Victron system at <%= siteAddressShort %>.</p>
       </div>
@@ -75,8 +77,8 @@
           </div>
           <span class="header-rule" aria-hidden="true"></span>
           <div class="site">
-            <p class="site-name"><%= siteName %></p>
-            <p class="stage-address"><%= siteAddress %></p>
+            <p class="site-name"><%= siteLabel %></p>
+            <p class="stage-address"><%= siteName %> · <%= siteAddress %></p>
           </div>
           <div class="stage-meta">
             <div class="status">
@@ -101,24 +103,7 @@
         </button>
 
       <figure class="flow">
-        <svg class="flow-svg" viewBox="0 0 800 470" role="img" aria-labelledby="flowTitle flowSummary">
-          <title id="flowTitle">Live energy flow</title>
-          <desc id="flowSummary">Waiting for the first reading.</desc>
-
-          <!-- wires (static) and flows (animated, only H or V) -->
-          <% [["solar","M400 112 V191"],["grid","M186 235 H325"],["home","M475 235 H614"],["battery","M400 279 V358"]].forEach(([id, d]) => { %>
-          <path class="wire" id="wire-<%= id %>" d="<%= d %>" />
-          <% }) %>
-          <% ["solar","grid","home","battery"].forEach((id) => { %>
-          <path class="flow-line flow-line--<%= id %>" id="flow-<%= id %>" d="" />
-          <% }) %>
-
-          <%- include("partials/flow-node.ejs", { id: "solar",    x: 315, y: 8,   icon: "sun",      label: "SOLAR",       tone: "lime" }) %>
-          <%- include("partials/flow-node.ejs", { id: "grid",     x: 16,  y: 183, icon: "grid",     label: "GRID",        tone: "stone" }) %>
-          <%- include("partials/flow-node.ejs", { id: "inverter", x: 325, y: 191, width: 150, height: 88, icon: "inverter", label: "INVERTER", tone: "stone" }) %>
-          <%- include("partials/flow-node.ejs", { id: "home",     x: 614, y: 183, icon: "building", label: "CONSUMPTION", tone: "stone" }) %>
-          <%- include("partials/flow-node.ejs", { id: "battery",  x: 315, y: 358, icon: "battery",  label: "BATTERY",     tone: "lime" }) %>
-        </svg>
+        <%- include("partials/flow-diagram.ejs", { prefix: "", label: siteLabel }) %>
       </figure>
       </div>
     </section>
@@ -201,6 +186,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <% } %>
   <script src="/motion/motion.js"></script>
+  <script src="/flow.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
