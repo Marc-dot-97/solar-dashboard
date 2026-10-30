@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "check-db": "node scripts/check-db.js"
   },
   "engines": {
     "node": ">=18"

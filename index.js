@@ -94,6 +94,7 @@ function livePayload(site) {
   return { ok: true, label: site.label, vrmUrl: vrmUrl(site.id), stale: Boolean(lastError), lastError, ...latest, alerts };
 }
 
+app.disable("x-powered-by");
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
@@ -154,7 +155,9 @@ await db.init();
 await pollAll();
 setInterval(pollAll, pollSeconds * 1000);
 
-app.listen(port, () => {
+// HOST=127.0.0.1 on the PROD server so only IIS (same machine) can reach the app. Unset = all interfaces (dev).
+const listenArgs = process.env.HOST ? [port, process.env.HOST] : [port];
+app.listen(...listenArgs, () => {
   console.log(`Solar dashboard running on http://localhost:${port}  (${sites.map((s) => s.label).join(" + ")}, VRM poll every ${pollSeconds}s)`);
   if (sites.length > 1) console.log(`Side by side:  http://localhost:${port}/side-by-side`);
 });
